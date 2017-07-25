@@ -1,4 +1,4 @@
-# $Id: libs.mk,v 1.1.1.2 2013/09/12 23:19:09 sjg Exp $
+# $Id: libs.mk,v 1.4 2013/09/12 23:23:22 sjg Exp $
 #
 #	@(#) Copyright (c) 2006, Simon J. Gerraty
 #

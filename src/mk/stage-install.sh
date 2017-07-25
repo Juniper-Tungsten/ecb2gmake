@@ -33,7 +33,7 @@
 #	
 
 # RCSid:
-#	$Id: stage-install.sh,v 1.1.1.1 2013/05/29 21:14:15 sjg Exp $
+#	$Id: stage-install.sh,v 1.3 2013/05/29 21:25:08 sjg Exp $
 #
 #	@(#) Copyright (c) 2013, Simon J. Gerraty
 #

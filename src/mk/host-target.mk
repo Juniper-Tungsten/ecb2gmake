@@ -1,5 +1,5 @@
 # RCSid:
-#	$Id: host-target.mk,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+#	$Id: host-target.mk,v 1.3 2013/01/30 20:26:58 sjg Exp $
 
 # Host platform information; may be overridden
 .if !defined(_HOST_OSNAME)

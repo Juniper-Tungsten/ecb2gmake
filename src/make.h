@@ -196,7 +196,10 @@ typedef struct GNode {
 #define DONECYCLE	0x2000  /* Used by MakePrintStatus */
     enum enum_made {
 	UNMADE, DEFERRED, REQUESTED, BEINGMADE,
-	MADE, UPTODATE, ERROR, ABORTED
+	MADE, UPTODATE, ERROR, ABORTED,
+#ifdef ECB2G
+	TRANSLATED,
+#endif
     }	    	    made;    	/* Set to reflect the state of processing
 				 * on this node:
 				 *  UNMADE - Not examined yet
@@ -210,6 +213,7 @@ typedef struct GNode {
 				 *  	made (used only in compat mode)
 				 *  ABORTED - The target was aborted due to
 				 *  	an error making an inferior (compat).
+				 *  TRANSLATED - The target was translated 
 				 */
     int             unmade;    	/* The number of unmade children */
 
@@ -430,6 +434,8 @@ extern char	*progname;	/* The program name */
 extern char	*makeDependfile; /* .depend */
 extern char	**savedEnv;	 /* if we replaced environ this will be non-NULL */
 
+extern int	makelevel;
+
 /*
  * We cannot vfork() in a child of vfork().
  * Most systems do not enforce this but some do.
@@ -499,6 +505,8 @@ void Main_ExportMAKEFLAGS(Boolean);
 Boolean Main_SetObjdir(const char *);
 int mkTempFile(const char *, char **);
 int str2Lst_Append(Lst, char *, const char *);
+int getInt(const char *, int);
+
 
 #ifdef __GNUC__
 #define UNCONST(ptr)	({ 		\

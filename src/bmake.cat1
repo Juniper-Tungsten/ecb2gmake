@@ -476,6 +476,14 @@ VVAARRIIAABBLLEE AASSSSIIGGNNMMEENNTTSS
 
      _._M_A_K_E_._J_O_B_S      The argument to the --jj option.
 
+     _M_A_K_E___J_O_B_S___C_M_D   names a command to be run occasionally by the initial
+                     instance (level 0) of bbmmaakkee to adjust the number of job
+                     tokens available.
+
+     _M_A_K_E___J_O_B_S___C_M_D___I_N_T_E_R_V_A_L
+                     Sets the minimum number of seconds between runs of
+                     _M_A_K_E___J_O_B_S___C_M_D.
+
      _._M_A_K_E_._J_O_B_._P_R_E_F_I_X
                      If bbmmaakkee is run with _j then output for each target is
                      prefixed with a token `--- target ---' the first part of

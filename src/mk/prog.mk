@@ -1,4 +1,4 @@
-#	$Id: prog.mk,v 1.1.1.2 2013/08/05 17:14:01 sjg Exp $
+#	$Id: prog.mk,v 1.4 2013/08/05 17:20:42 sjg Exp $
 
 .if !target(__${.PARSEFILE}__)
 __${.PARSEFILE}__:

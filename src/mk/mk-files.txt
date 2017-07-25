@@ -463,5 +463,5 @@ where you unpacked the tar file, you can::
 .. _mk.tar.gz: http://www.crufty.net/ftp/pub/sjg/mk.tar.gz
 
 :Author: sjg@crufty.net
-:Revision: $Id: mk-files.txt,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+:Revision: $Id: mk-files.txt,v 1.3 2013/01/30 20:26:58 sjg Exp $
 :Copyright: Crufty.NET

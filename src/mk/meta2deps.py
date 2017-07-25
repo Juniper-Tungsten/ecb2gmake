@@ -37,7 +37,7 @@ We only pay attention to a subset of the information in the
 
 """
 RCSid:
-	$Id: meta2deps.py,v 1.1.1.5 2014/03/18 15:55:47 sjg Exp $
+	$Id: meta2deps.py,v 1.7 2014/03/18 16:08:36 sjg Exp $
 
 	Copyright (c) 2011-2013, Juniper Networks, Inc.
 	All rights reserved.

@@ -46,6 +46,9 @@
 
 #include "make.h"
 #include "job.h"
+#ifdef ECB2G
+#include "ecb2g.h"
+#endif
 
 #ifdef HAVE_FILEMON_H
 # include <filemon.h>
@@ -486,6 +489,10 @@ meta_create(BuildMon *pbm, GNode *gn)
 	/* Don't create meta data. */
 	goto out;
 
+#ifdef ECB2G
+	ecb2gMetaWrite();
+#endif
+
     fname = meta_name(gn, pbm->meta_fname, sizeof(pbm->meta_fname),
 		      dname, tname);
 
@@ -494,6 +501,7 @@ meta_create(BuildMon *pbm, GNode *gn)
 	fprintf(debug_file, "meta_create: %s\n", fname);
 #endif
 
+#ifndef ECB2G
     if ((mf.fp = fopen(fname, "w")) == NULL)
 	err(1, "Could not open meta file '%s'", fname);
 
@@ -513,7 +521,7 @@ meta_create(BuildMon *pbm, GNode *gn)
 
     fprintf(mf.fp, "-- command output --\n");
     fflush(mf.fp);
-
+#endif
     Var_Append(".MAKE.META.FILES", fname, VAR_GLOBAL);
     Var_Append(".MAKE.META.CREATED", fname, VAR_GLOBAL);
 
@@ -598,7 +606,11 @@ meta_mode_init(const char *make_mode)
 	 * This works be cause :H will generate '.' if there is no /
 	 * and :tA will resolve that to cwd.
 	 */
+#ifdef ECB2G
+	Var_Set(MAKE_META_PREFIX, "ecb2g: ${.TARGET:H:tA}/${.TARGET:T}", VAR_GLOBAL, 0);
+#else
 	Var_Set(MAKE_META_PREFIX, "Building ${.TARGET:H:tA}/${.TARGET:T}", VAR_GLOBAL, 0);
+#endif
     }
     if (once)
 	return;
@@ -1034,7 +1046,9 @@ meta_oodate(GNode *gn, Boolean oodate)
 		    break;
 		}
 
-		CHECK_VALID_META(p);
+		/* JUNOS: we have lots of build servers running old filemon */
+		if (buf[0] != 'X')
+		    CHECK_VALID_META(p);
 
 		/* Process according to record type. */
 		switch (buf[0]) {

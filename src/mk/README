@@ -1,4 +1,4 @@
-#	$Id: README,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+#	$Id: README,v 1.3 2013/01/30 20:26:58 sjg Exp $
 
 This directory contains some macro's derrived from the NetBSD bsd.*.mk
 macros.  They have the same names but without the bsd., separate macro

@@ -1,0 +1,42 @@
+:
+[ -s make-conf.h -a ! -d CVS ] || {
+    echo "Must be in top level dir of bmake distribution" >&2
+    exit 1
+}
+case "$1" in
+[1-9]*) PR=$1;;
+*) echo "Must supply a PR number" >&2; exit 1;;
+esac
+
+# what version are we importing
+eval `sed -n "/^[A-Z]*AKE_VER/s/^\([A-Z][A-Z_]*\)[ :=][ :=]*\([^ ][^ ]*\).*/\1='\2'/p" Makefile`
+version=`eval echo $MAKE_VERSION`
+case "$version" in
+[1-9]*) version=bmake-$version;;
+esac
+version_tag=`echo $version | tr '.' '-'`
+
+CVSROOT=cvs.juniper.net:/cvs/juniper
+repository=src/buildtools/bmake
+
+CVS=${CVS:-`/volume/buildtools/bin/fwtools.sh -n --version='1.12*' cvs | sed 's,exec ,,'`}
+CVS=${CVS:-cvs}
+# we'd like to use -X but can live without.
+_X=-X
+$CVS -H import 2>&1 | egrep '^[[:space:]]*-X' >/dev/null || _X=
+
+# borrow this from the bmake import script
+oldtag=`$CVS -d $CVSROOT rlog $repository/make.c 2>&1 |
+		sed -n '/juniper/d;/bmake-/{s,.*\(bmake-[^:]*\):.*,\1,p;q;}'`
+set -x
+
+$ECHO $CVS -d $CVSROOT import $_X \
+	-I configure \
+	-m "Import $version
+
+PR: $PR" \
+	$repository BMAKE $version_tag
+
+set +x
+echo
+echo "cvs -d $CVSROOT checkout -j$oldtag -j$version_tag -d bmake $repository"

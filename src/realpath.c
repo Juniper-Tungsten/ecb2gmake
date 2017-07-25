@@ -1,4 +1,4 @@
-/* $Id: realpath.c,v 1.1.1.3 2013/01/30 20:17:35 sjg Exp $ */
+/* $Id: realpath.c,v 1.5 2013/01/30 20:26:57 sjg Exp $ */
 /* from: $NetBSD: getcwd.c,v 1.53 2012/06/21 23:29:23 enami Exp $	*/
 
 /*

@@ -1,4 +1,4 @@
-#	$Id: OSF1.mk,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+#	$Id: OSF1.mk,v 1.3 2013/01/30 20:26:59 sjg Exp $
 #	$NetBSD: sys.mk,v 1.19.2.1 1994/07/26 19:58:31 cgd Exp $
 #	@(#)sys.mk	5.11 (Berkeley) 3/13/91
 

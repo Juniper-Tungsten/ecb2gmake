@@ -1,4 +1,4 @@
-# $Id: init.mk,v 1.1.1.2 2013/08/05 17:14:01 sjg Exp $
+# $Id: init.mk,v 1.4 2013/08/05 17:20:42 sjg Exp $
 #
 #	@(#) Copyright (c) 2002, Simon J. Gerraty
 #

@@ -1,4 +1,4 @@
-#	$Id: Generic.mk,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+#	$Id: Generic.mk,v 1.3 2013/01/30 20:26:59 sjg Exp $
 #
 
 # some reasonable defaults

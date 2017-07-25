@@ -10,8 +10,11 @@ case "@use_meta@" in
 yes) XDEFS="-DUSE_META ${XDEFS}";;
 esac
 
+# Force these additional ECB2G flags
+XDEFS="-DECB2G -DECB2G_HASHTAG -DECB2G_SPLIT_SANDBOX ${XDEFS}"
+
 CC="@CC@"
-CFLAGS="@CFLAGS@ -I. -I${srcdir} @DEFS@ @CPPFLAGS@ -DMAKE_NATIVE ${XDEFS} -DBMAKE_PATH_MAX=@bmake_path_max@"
+CFLAGS="@CFLAGS@ -I. -I${srcdir} -I${srcdir}/ecb2g @DEFS@ @CPPFLAGS@ -DMAKE_NATIVE ${XDEFS} -DBMAKE_PATH_MAX=@bmake_path_max@"
 
 MAKE_VERSION=`sed -n '/^MAKE_VERSION=/s,.*=[^0-9]*,,p' $srcdir/Makefile`
 
@@ -34,7 +37,7 @@ do_compile() {
 	obj="$1"; shift
 	src=`basename "$obj" .o`.c
 
-	for d in "$srcdir" "$srcdir/lst.lib"
+	for d in "$srcdir" "$srcdir/lst.lib" "$srcdir/ecb2g" "$srcdir/ecb2gmake"
 	do
 		test -s "$d/$src" || continue
 
@@ -53,7 +56,7 @@ do_link() {
 
 BASE_OBJECTS="arch.o buf.o compat.o cond.o dir.o for.o getopt hash.o \
 job.o make.o make_malloc.o parse.o sigcompat.o str.o strlist.o \
-suff.o targ.o trace.o var.o util.o"
+suff.o targ.o trace.o var.o util.o ecb2g.o"
 
 LST_OBJECTS="lstAppend.o lstDupl.o lstInit.o lstOpen.o \
 lstAtEnd.o lstEnQueue.o lstInsert.o lstAtFront.o lstIsAtEnd.o \
@@ -64,9 +67,12 @@ lstDestroy.o lstNext.o lstPrev.o"
 
 LIB_OBJECTS="@LIBOBJS@"
 
+ECB2GMAKE_OBJECTS="ecb2gmake.o ecb2gdebug.o ecb2gmakeutils.o \
+ecb2gmakehash.o translate.o emake.o ecb2gmakeparse.o"
+
 do_compile main.o ${MDEFS}
 
-for o in ${BASE_OBJECTS} ${LST_OBJECTS} ${LIB_OBJECTS}
+for o in ${BASE_OBJECTS} ${LST_OBJECTS} ${LIB_OBJECTS} ${ECB2GMAKE_OBJECTS}
 do
 	do_compile "$o"
 done
@@ -81,4 +87,5 @@ yes)
         ;;
 esac
 
-do_link bmake main.o ${BASE_OBJECTS} ${LST_OBJECTS} ${LIB_OBJECTS}
+do_link ecb2g main.o ${BASE_OBJECTS} ${LST_OBJECTS} ${LIB_OBJECTS}
+do_link ecb2gmake ${ECB2GMAKE_OBJECTS}

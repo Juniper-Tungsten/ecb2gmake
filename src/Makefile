@@ -1,9 +1,9 @@
-#	$Id: Makefile,v 1.1.1.8 2014/03/18 15:55:46 sjg Exp $
+#	$Id: Makefile,v 1.12.2.2 2014/10/09 15:10:58 klash Exp $
 
 # Base version on src date
 MAKE_VERSION= 20140214
 
-PROG=	bmake
+PROG=	ecb2g
 
 SRCS= \
 	arch.c \
@@ -11,6 +11,7 @@ SRCS= \
 	compat.c \
 	cond.c \
 	dir.c \
+	ecb2g.c \
 	for.c \
 	hash.c \
 	job.c \
@@ -70,7 +71,7 @@ srcdir?= ${.CURDIR}
 
 DEFAULT_SYS_PATH?= ${prefix}/share/mk
 
-CPPFLAGS+= -DUSE_META
+CPPFLAGS+= -DUSE_META -DECB2G -DECB2G_HASHTAG
 CFLAGS+= ${CPPFLAGS}
 CFLAGS+= -D_PATH_DEFSYSPATH=\"${DEFAULT_SYS_PATH}\"
 CFLAGS+= -I. -I${srcdir} ${XDEFS} -DMAKE_NATIVE
@@ -171,6 +172,12 @@ MANDEST?= ${MANDIR}/${MANTARGET}1
 _mfromdir=${srcdir}
 .endif
 
+# This wrapper should probably have its function merged into
+# ecb2g (bmake) directly.
+ecb2gmake: ecb2gmake.c
+
+all: ecb2gmake
+
 .include <prog.mk>
 
 CPPFLAGS+= -DMAKE_NATIVE -DHAVE_CONFIG_H
@@ -206,6 +213,11 @@ install: install-mk
 beforeinstall:
 	test -d ${DESTDIR}${BINDIR} || ${INSTALL} -m 775 -d ${DESTDIR}${BINDIR}
 	test -d ${DESTDIR}${MANDEST} || ${INSTALL} -m 775 -d ${DESTDIR}${MANDEST}
+
+install: install-ecb2gmake
+install-ecb2gmake:
+	${INSTALL} ${COPY} ${STRIP_FLAG} ${PROG_INSTALL_OWN} -m ${BINMODE} \
+		ecb2gmake ${DESTDIR}${BINDIR}/ecb2gmake
 
 install-mk:
 .if exists(${MKSRC}/install-mk)

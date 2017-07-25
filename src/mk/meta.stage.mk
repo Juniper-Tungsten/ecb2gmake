@@ -1,4 +1,4 @@
-# $Id: meta.stage.mk,v 1.1.1.3 2013/05/29 21:14:15 sjg Exp $
+# $Id: meta.stage.mk,v 1.5 2013/05/29 21:25:08 sjg Exp $
 #
 #	@(#) Copyright (c) 2011, Simon J. Gerraty
 #

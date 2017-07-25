@@ -133,6 +133,9 @@ __RCSID("$NetBSD: main.c,v 1.226 2014/02/07 17:23:35 pooka Exp $");
 #include <time.h>
 #include <ctype.h>
 
+#ifdef ECB2G
+#include "ecb2g.h"
+#endif
 #include "make.h"
 #include "hash.h"
 #include "dir.h"
@@ -162,7 +165,7 @@ static Lst		makefiles;	/* ordered list of makefiles to read */
 static Boolean		printVars;	/* print value of one or more vars */
 static Lst		variables;	/* list of variables to print */
 int			maxJobs;	/* -j argument */
-static int		maxJobTokens;	/* -j argument */
+int			maxJobTokens;	/* -j argument */
 Boolean			compatMake;	/* -B argument */
 int			debug;		/* -d argument */
 Boolean			debugVflag;	/* -dV */
@@ -194,6 +197,9 @@ char *progname;				/* the program name */
 char *makeDependfile;
 pid_t myPid;
 int makelevel;
+#ifdef ECB2G
+char mfilename[MAXPATHLEN + 1];		/* Makefile */
+#endif
 
 Boolean forceJobs = FALSE;
 
@@ -869,6 +875,9 @@ main(int argc, char **argv)
 	 * Set the seed to produce a different random sequence
 	 * on each program execution.
 	 */
+#ifdef ECB2G
+        ecb2gInit();
+#endif
 	gettimeofday(&rightnow, NULL);
 	srandom(rightnow.tv_sec + rightnow.tv_usec);
 	
@@ -1257,6 +1266,11 @@ main(int argc, char **argv)
 	    }
 	}
 
+#ifdef ECB2G
+	ecb2gSetMakefile(mfilename);
+	ecb2gSetObjDir(objdir);
+#endif
+	    
 	/* In particular suppress .depend for '-r -V .OBJDIR -f /dev/null' */
 	if (!noBuiltins || !printVars) {
 	    makeDependfile = Var_Subst(NULL, "${.MAKE.DEPENDFILE:T}",
@@ -1369,7 +1383,11 @@ main(int argc, char **argv)
 		else
 			targs = Targ_FindList(create, TARG_CREATE);
 
+#ifdef ECB2G
+		if (ecb2gEnabled() && !compatMake) {
+#else
 		if (!compatMake) {
+#endif
 			/*
 			 * Initialize job module before traversing the graph
 			 * now that any .BEGIN and .END targets have been read.
@@ -1442,6 +1460,9 @@ ReadMakefile(const void *p, const void *q MAKE_ATTR_UNUSED)
 	if (!strcmp(fname, "-")) {
 		Parse_File(NULL /*stdin*/, -1);
 		Var_Set("MAKEFILE", "", VAR_INTERNAL, 0);
+#ifdef ECB2G
+		strcpy(mfilename, fname);
+#endif
 	} else {
 		/* if we've chdir'd, rebuild the path name */
 		if (strcmp(curdir, objdir) && *fname != '/') {
@@ -1489,6 +1510,12 @@ ReadMakefile(const void *p, const void *q MAKE_ATTR_UNUSED)
 		 * makefile specified, as it is set by SysV make.
 		 */
 found:
+#ifdef ECB2G
+		/* Copy the makefile name onto buffer */
+		if (!realpath(fname, mfilename)) {
+		    Fatal("%s : Failed to find the realpath\n", fname);
+		}
+#endif
 		if (!doing_depend)
 			Var_Set("MAKEFILE", fname, VAR_INTERNAL, 0);
 		Parse_File(fname, fd);
@@ -1918,6 +1945,8 @@ Main_ExportMAKEFLAGS(Boolean first)
 	setenv("MAKE", s, 1);
 #endif
     }
+    if (s)
+	free(s);
 }
 
 char *
@@ -2016,4 +2045,22 @@ getBoolean(const char *name, Boolean bf)
 	}
     }
     return (bf);
+}
+
+int
+getInt(const char *name, int i)
+{
+    char tmp[64];
+    char *cp;
+
+    if (snprintf(tmp, sizeof(tmp), "${%s}", name) < (int)(sizeof(tmp))) {
+	cp = Var_Subst(NULL, tmp, VAR_GLOBAL, 0);
+
+	if (cp) {
+	    if (*cp)
+		i = atoi(cp);
+	    free(cp);
+	}
+    }
+    return (i);
 }

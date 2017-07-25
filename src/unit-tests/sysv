@@ -1,4 +1,4 @@
-# $Id: sysv,v 1.1.1.2 2011/06/10 00:11:32 sjg Exp $
+# $Id: sysv,v 1.4 2011/06/10 00:18:48 sjg Exp $
 
 FOO ?=
 FOOBAR = $(FOO:=bar)

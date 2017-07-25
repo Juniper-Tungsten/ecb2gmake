@@ -1,4 +1,4 @@
-# $Id: sys.dependfile.mk,v 1.1.1.2 2013/04/01 19:51:02 sjg Exp $
+# $Id: sys.dependfile.mk,v 1.4 2013/04/01 19:59:56 sjg Exp $
 #
 #	@(#) Copyright (c) 2012, Simon J. Gerraty
 #

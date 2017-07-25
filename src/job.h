@@ -247,6 +247,7 @@ extern char *shellErrFlag;
 
 extern int	jobTokensRunning; /* tokens currently "out" */
 extern int	maxJobs;	/* Max jobs we can run */
+extern int	maxJobTokens;	/* almost the same thing */
 
 void Shell_Init(void);
 const char *Shell_GetNewline(void);

@@ -188,6 +188,17 @@ int jobTokensRunning = 0;
 int not_parallel = 0;		    /* set if .NOT_PARALLEL */
 
 /*
+ * If set, we run it occasionally to adjust maxJobTokens
+ */
+static char *jobs_cmd = NULL;
+static Boolean jobsMaster = FALSE; /* do we own the token pool */
+static int jobTokensAdjust = 0;	   /* only relevant if jobs_cmd set */
+/* default interval (seconds) for running jobs_cmd */
+#ifndef DEFAULT_MAKE_JOBS_CMD_INTERVAL
+# define DEFAULT_MAKE_JOBS_CMD_INTERVAL 300
+#endif
+
+/*
  * XXX: Avoid SunOS bug... FILENO() is fp->_file, and file
  * is a char! So when we go above 127 we turn negative!
  */
@@ -375,6 +386,124 @@ static void JobSigUnlock(sigset_t *);
 static void JobSigReset(void);
 
 const char *malloc_options="A";
+
+/*
+ * Job_maxTokens - dynamically adjust maxJobTokens
+ *
+ * This is only used by the initial instance of make which is the
+ * master of the token pool.
+ * We run an external tool which reports the maxJobTokens
+ * value we should use.
+ * We get called from JobFinish() as well as Job_CatchOutput()
+ * and if it has been more than ${MAKE_JOBS_CMD_INTERVAL} seconds we
+ * re-run ${MAKE_JOBS_CMD}.
+ * If the result is higher than before (limited by maxJobs) we add
+ * tokens to the queue, and if less avoid re-adding until the
+ * adjustment is completed.
+ */
+static void
+Job_maxTokens(void)
+{
+    static time_t interval, last = 0, utc;
+    char *cp = NULL;
+    const char *ep;
+    int max_tokens = maxJobTokens;
+
+    if (!last) {
+	/* First time. */
+	jobs_cmd = Var_Subst(NULL, "${MAKE_JOBS_CMD}", VAR_GLOBAL, 0);
+	if (jobs_cmd) {
+	    if (!jobs_cmd[0]) {
+		free(jobs_cmd);
+		jobs_cmd = NULL;
+	    }
+	}
+	if (jobs_cmd) {
+	    interval = getInt("MAKE_JOBS_CMD_INTERVAL",
+			      DEFAULT_MAKE_JOBS_CMD_INTERVAL);
+	    if (interval < 1)
+		interval = DEFAULT_MAKE_JOBS_CMD_INTERVAL;
+	}
+    }
+    if (!jobs_cmd)
+	return;
+
+    time(&utc);
+    if (utc - last < interval)
+	return;
+
+    cp = Cmd_Exec(jobs_cmd, &ep);
+    if (!cp)
+	return;				/* out of memory */
+    if (*cp) {
+	max_tokens = atoi(cp);
+	if (max_tokens < 1 && !last) {
+	    /* this is our first call */
+	    if (DEBUG(JOB)) {
+		(void)fprintf(debug_file,
+			      "Job_maxTokens: %s failed: '%s'\n",
+			      jobs_cmd, cp);
+	    }
+	    free(cp);
+	    free(jobs_cmd);
+	    jobs_cmd = NULL;
+	    return;
+	}
+    }
+    free(cp);
+
+    last = utc;
+    if (DEBUG(JOB)) {
+	(void)fprintf(debug_file,
+		      "Job_maxTokens: cmd=%s interval=%u old=%d new=%d\n",
+		      jobs_cmd, (unsigned int)interval,
+		      maxJobTokens, max_tokens);
+    }
+    /* sanity checks */
+    if (max_tokens > maxJobs)
+	max_tokens = maxJobs;
+    else if (max_tokens < 1)
+	max_tokens = maxJobTokens;
+    if (max_tokens == maxJobTokens) {
+	jobTokensAdjust = 0;
+    } else {
+	jobTokensAdjust = max_tokens - maxJobTokens;
+	if (DEBUG(JOB)) {
+	    (void)fprintf(debug_file,
+			  "Job_maxTokens: adjust %+d tokens\n",
+			  jobTokensAdjust);
+	}
+    }
+    /*
+     * Token addition is simple.
+     */
+    if (jobTokensAdjust > 0) {
+	while (jobTokensAdjust-- > 0) {
+	    JobTokenAdd();
+	    maxJobTokens++;
+	}
+    }
+    /*
+     * Token reduction can be more complicated.
+     * We try to take some here anyway - until we block.
+     * If further adjustment is needed it happens in
+     * Job_TokenReturn().
+     */
+    if (jobTokensAdjust < 0) {
+	/*
+	 * Job_TokenWithdraw() won't pull a token if
+	 * jobTokensRunning is 0 or >= maxJobs.
+	 */
+	int saved = jobTokensRunning;	/* remember current state */
+
+	jobTokensRunning = maxJobs + jobTokensAdjust; /* ensure we have room */
+	while (jobTokensAdjust < 0 && Job_TokenWithdraw()) {
+	    jobTokensAdjust++;
+	    maxJobTokens--;
+	}
+	jobTokensRunning = saved;
+    }
+}
 
 static void
 job_table_dump(const char *where)
@@ -1116,6 +1245,8 @@ JobFinish (Job *job, WAIT_T status)
 	 */
 	Finish(errors);
     }
+    if (jobs_cmd)
+	Job_maxTokens();
 }
 
 /*-
@@ -1216,6 +1347,7 @@ Job_CheckCommands(GNode *gn, void (*abortProc)(const char *, ...))
 {
     if (OP_NOP(gn->type) && Lst_IsEmpty(gn->commands) &&
 	((gn->type & OP_LIB) == 0 || Lst_IsEmpty(gn->children))) {
+        debug |= DEBUG_DIR;
 	/*
 	 * No commands. Look for .DEFAULT rule from which we might infer
 	 * commands
@@ -1246,6 +1378,7 @@ Job_CheckCommands(GNode *gn, void (*abortProc)(const char *, ...))
 	     */
 	    static const char msg[] = ": don't know how to make";
 
+            debug &= !DEBUG_DIR;
 	    if (gn->flags & FROM_DEPEND) {
 		if (!Job_RunTarget(".STALE", gn->fname))
 		    fprintf(stdout, "%s: %s, %d: ignoring stale %s for %s\n",
@@ -1268,6 +1401,7 @@ Job_CheckCommands(GNode *gn, void (*abortProc)(const char *, ...))
 		return FALSE;
 	    }
 	}
+        debug &= !DEBUG_DIR;
     }
     return TRUE;
 }
@@ -2066,6 +2200,9 @@ Job_CatchOutput(void)
 
     (void)fflush(stdout);
 
+    if (jobs_cmd)
+	Job_maxTokens();
+
     /* The first fd in the list is the job token pipe */
     do {
 	nready = poll(fds + 1 - wantToken, nfds - 1 + wantToken, POLL_MSEC);
@@ -2215,6 +2352,12 @@ void
 Job_Init(void)
 {
     Job_SetPrefix();
+
+    if (jobsMaster) {
+	/* See if makefiles or environment set MAKE_JOBS_CMD */
+	Job_maxTokens();
+    }
+
     /* Allocate space for all the job info */
     job_table = bmake_malloc(maxJobs * sizeof *job_table);
     memset(job_table, 0, maxJobs * sizeof *job_table);
@@ -2652,6 +2795,8 @@ Job_End(void)
 #ifdef CLEANUP
     if (shellArgv)
 	free(shellArgv);
+    if (jobs_cmd)
+	free(jobs_cmd);
 #endif
 }
 
@@ -2834,7 +2979,7 @@ JobTokenAdd(void)
 
 /*-
  *-----------------------------------------------------------------------
- * Job_ServerStartTokenAdd --
+ * Job_ServerStart --
  *	Prep the job token pipe in the root make process.
  *
  *-----------------------------------------------------------------------
@@ -2854,6 +2999,8 @@ Job_ServerStart(int max_tokens, int jp_0, int jp_1)
 	(void)fcntl(jp_1, F_SETFD, 1);
 	return;
     }
+
+    jobsMaster = TRUE;
 
     JobCreatePipe(&tokenWaitJob, 15);
 
@@ -2889,8 +3036,14 @@ Job_TokenReturn(void)
     jobTokensRunning--;
     if (jobTokensRunning < 0)
 	Punt("token botch");
-    if (jobTokensRunning || JOB_TOKENS[aborting] != '+')
-	JobTokenAdd();
+    if (jobTokensRunning || JOB_TOKENS[aborting] != '+') {
+	if (jobTokensAdjust < 0 && maxJobTokens > 1) {
+	    jobTokensAdjust++;
+	    maxJobTokens--;
+	} else {
+	    JobTokenAdd();
+	}
+    }
 }
 
 /*-

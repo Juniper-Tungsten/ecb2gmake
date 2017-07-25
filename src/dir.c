@@ -1494,24 +1494,26 @@ Dir_MTime(GNode *gn, Boolean recheck)
 		    Targ_FmtTime(Hash_GetTimeValue(entry)), fullName);
 	}
 	stb.st_mtime = Hash_GetTimeValue(entry);
-    } else if (stat(fullName, &stb) < 0) {
-	if (gn->type & OP_MEMBER) {
-	    if (fullName != gn->path)
-		free(fullName);
-	    return Arch_MemMTime(gn);
-	} else {
-	    stb.st_mtime = 0;
-	}
     } else {
-	if (stb.st_mtime == 0) {
+	if (stat(fullName, &stb) < 0) {
+	    if (gn->type & OP_MEMBER) {
+		if (fullName != gn->path)
+		    free(fullName);
+		return Arch_MemMTime(gn);
+	    } else {
+		stb.st_mtime = 0;
+	    }
+	} else {
+	    if (stb.st_mtime == 0) {
 		/*
 		 * 0 handled specially by the code, if the time is really 0,
 		 * return something else instead
 		 */
 		stb.st_mtime = 1;
+	    }
+	    entry = Hash_CreateEntry(&mtimes, fullName, NULL);
+	    Hash_SetTimeValue(entry, stb.st_mtime);
 	}
-	entry = Hash_CreateEntry(&mtimes, fullName, NULL);
-	Hash_SetTimeValue(entry, stb.st_mtime);
     }
 	
     if (fullName && gn->path == NULL) {

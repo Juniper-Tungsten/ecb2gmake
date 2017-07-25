@@ -138,8 +138,10 @@ __RCSID("$NetBSD: var.c,v 1.184 2013/09/04 15:38:26 sjg Exp $");
 #include    "buf.h"
 #include    "dir.h"
 #include    "job.h"
+#ifdef ECB2G
+#include    "ecb2g.h"
+#endif
 
-extern int makelevel;
 /*
  * This lets us tell if we have replaced the original environ
  * (which we cannot free).
@@ -608,12 +610,27 @@ Var_Export1(const char *name, int parent)
     if (v == NULL) {
 	return 0;
     }
+#ifdef ECB2G
+    val = Buf_GetAll(&v->val, NULL);
+    ecb2gExportNotify(name, val);
+#endif
     if (!parent &&
 	(v->flags & (VAR_EXPORTED|VAR_REEXPORT)) == VAR_EXPORTED) {
 	return 0;			/* nothing to do */
     }
+#ifndef ECB2G
     val = Buf_GetAll(&v->val, NULL);
+#endif
     if (strchr(val, '$')) {
+#ifdef ECB2G
+	if (v->flags & VAR_IN_USE) {
+	    /*
+	     * We recursed while exporting in a child.
+	     * This isn't going to end well, just skip it.
+	     */
+	    return 0;
+	}
+#endif
 	if (parent) {
 	    /*
 	     * Flag this as something we need to re-export.
@@ -623,6 +640,7 @@ Var_Export1(const char *name, int parent)
 	    v->flags |= (VAR_EXPORTED|VAR_REEXPORT);
 	    return 1;
 	}
+#ifndef ECB2G
 	if (v->flags & VAR_IN_USE) {
 	    /*
 	     * We recursed while exporting in a child.
@@ -630,6 +648,7 @@ Var_Export1(const char *name, int parent)
 	     */
 	    return 0;
 	}
+#endif
 	n = snprintf(tmp, sizeof(tmp), "${%s}", name);
 	if (n < (int)sizeof(tmp)) {
 	    val = Var_Subst(NULL, tmp, VAR_GLOBAL, 0);

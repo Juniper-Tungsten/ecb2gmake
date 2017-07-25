@@ -1,4 +1,4 @@
-# $Id: progs.mk,v 1.1.1.3 2013/09/12 23:19:09 sjg Exp $
+# $Id: progs.mk,v 1.5 2013/09/12 23:23:22 sjg Exp $
 #
 #	@(#) Copyright (c) 2006, Simon J. Gerraty
 #

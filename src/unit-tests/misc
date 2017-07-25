@@ -1,4 +1,4 @@
-# $Id: misc,v 1.1.1.1 2011/03/07 17:18:47 sjg Exp $
+# $Id: misc,v 1.3 2011/03/07 17:22:18 sjg Exp $
 
 .if !exists(${.CURDIR}/)
 .warning ${.CURDIR}/ doesn't exist ?

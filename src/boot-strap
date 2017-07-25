@@ -111,7 +111,7 @@
 #	Simon J. Gerraty <sjg@crufty.net>
 
 # RCSid:
-#	$Id: boot-strap,v 1.1.1.25 2014/03/18 15:55:46 sjg Exp $
+#	$Id: boot-strap,v 1.25.2.1 2014/10/09 15:10:58 klash Exp $
 #
 #	@(#) Copyright (c) 2001 Simon J. Gerraty
 #
@@ -391,7 +391,7 @@ Bmake() {
 	    cd $Mydir &&
 	    MAKESYSPATH=$mksrc SRCTOP=$Mydir OBJTOP=$objdir \
 	    MAKEOBJDIR='${.CURDIR:S,${SRCTOP:tA},${OBJTOP:tA},}' \
-	    ${BMAKE:-$objdir/bmake} -f $Mydir/Makefile "$@"
+	    ${BMAKE:-$objdir/ecb2g} -f $Mydir/Makefile "$@"
     )
 }
 

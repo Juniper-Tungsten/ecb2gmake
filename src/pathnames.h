@@ -29,7 +29,7 @@
  * SUCH DAMAGE.
  *
  *	from: @(#)pathnames.h	5.2 (Berkeley) 6/1/90
- *	$Id: pathnames.h,v 1.1.1.9 2009/08/28 16:12:42 sjg Exp $
+ *	$Id: pathnames.h,v 1.12 2009/09/05 06:32:57 sjg Exp $
  */
 
 #if HAVE_CONFIG_H

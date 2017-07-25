@@ -1,4 +1,4 @@
-#	$Id: subdir.mk,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+#	$Id: subdir.mk,v 1.3 2013/01/30 20:26:58 sjg Exp $
 #	skip missing directories...
 
 #	$NetBSD: bsd.subdir.mk,v 1.11 1996/04/04 02:05:06 jtc Exp $

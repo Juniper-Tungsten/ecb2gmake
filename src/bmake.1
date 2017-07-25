@@ -740,6 +740,13 @@ The list of variables exported by
 The argument to the
 .Fl j
 option.
+.It Va MAKE_JOBS_CMD
+names a command to be run occasionally by the initial instance (level 0) of
+.Nm 
+to adjust the number of job tokens available.
+.It Va MAKE_JOBS_CMD_INTERVAL
+Sets the minimum number of seconds between runs of
+.Va MAKE_JOBS_CMD .
 .It Va .MAKE.JOB.PREFIX
 If
 .Nm

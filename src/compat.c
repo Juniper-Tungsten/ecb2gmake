@@ -112,6 +112,9 @@ __RCSID("$NetBSD: compat.c,v 1.94 2014/01/03 00:02:01 sjg Exp $");
 #include    "dir.h"
 #include    "job.h"
 #include    "pathnames.h"
+#ifdef ECB2G
+#include    "ecb2g.h"
+#endif
 
 /*
  * The following array is used to make a fast determination of which
@@ -550,7 +553,11 @@ Compat_Make(void *gnp, void *pgnp)
 	if (DEBUG(MAKE)) {
 	    fprintf(debug_file, "Examining %s...", gn->name);
 	}
+#ifdef ECB2G
+	if (ecb2gEnabled() && ! Make_OODate(gn)) {
+#else
 	if (! Make_OODate(gn)) {
+#endif
 	    gn->made = UPTODATE;
 	    if (DEBUG(MAKE)) {
 		fprintf(debug_file, "up-to-date.\n");
@@ -591,6 +598,10 @@ Compat_Make(void *gnp, void *pgnp)
 	     * Our commands are ok, but we still have to worry about the -t
 	     * flag...
 	     */
+#ifdef ECB2G
+	    int (*ecb2gTargetCommandsCb)(void *cmdp, void *gnp);
+	    ecb2gTargetCommandsCb = ecb2gOut(CompatRunCommand, gn);
+#endif
 	    if (!touchFlag || (gn->type & OP_MAKE)) {
 		curTarg = gn;
 #ifdef USE_META
@@ -598,7 +609,15 @@ Compat_Make(void *gnp, void *pgnp)
 		    meta_job_start(NULL, gn);
 		}
 #endif
+#ifndef ECB2G
 		Lst_ForEach(gn->commands, CompatRunCommand, gn);
+#else
+		if (ecb2gTargetCommandsCb) {
+		    Lst_ForEach(gn->commands, *ecb2gTargetCommandsCb, gn);
+		    /* Update the status of 'made' to translated */
+		    gn->made = TRANSLATED;
+		}
+#endif
 		curTarg = NULL;
 	    } else {
 		Job_Touch(gn, gn->type & OP_SILENT);
@@ -619,8 +638,27 @@ Compat_Make(void *gnp, void *pgnp)
 	     * that for .ZEROTIME targets, the timestamping isn't done.
 	     * This is to keep its state from affecting that of its parent.
 	     */
+#ifdef ECB2G
+	    int prev = gn->made;
+#endif
 	    gn->made = MADE;
 	    pgn->flags |= Make_Recheck(gn) == 0 ? FORCE : 0;
+#ifdef ECB2G
+	    /* If this was a translation, During rebuilds we have issues.
+	     * In case of
+	     *	file.o: file.c
+	     *	and
+	     *	exe: file.o
+	     * The exe is indirectly dependent on file.c.
+	     * But Make_Recheck will find the existence of file.o and
+	     * assumes that file.o is rebuilt.
+	     * It is true for normal build as the execution of
+	     * rules have been successful. For translation, even if file.o
+	     * exists, we need to rebuild it whenver file.c is modified.
+	     */
+	    if (TRANSLATED == prev)
+		gn->mtime = now;
+#endif
 	    if (!(gn->type & OP_EXEC)) {
 		pgn->flags |= CHILDMADE;
 		Make_TimeStamp(pgn, gn);
@@ -742,6 +780,11 @@ Compat_Run(Lst targs)
      *	    	  	    could not be made due to errors.
      */
     errors = 0;
+
+#ifdef ECB2G
+    ecb2gDefault(targs, dirSearchPath);
+#endif
+
     while (!Lst_IsEmpty (targs)) {
 	gn = (GNode *)Lst_DeQueue(targs);
 	Compat_Make(gn, gn);

@@ -83,11 +83,10 @@ shared.2.1
 shared.2.1
 shared.2.99
 shared.2.99
-make: Graph cycles through `cycle.2.99'
-make: Graph cycles through `cycle.2.98'
-make: Graph cycles through `cycle.2.97'
+make: Graph cycles through cycle.2.99
 cycle.1.99
 cycle.1.99
+`cycle' not remade because of errors.
 x=one
 x="two and three"
 x=four
@@ -318,8 +317,8 @@ LIST:tw:C/ /,/g="one two three four five six"
 LIST:tw:C/ /,/1g="one two three four five six"
 LIST:tw:tW:C/ /,/="one,two three four five six"
 LIST:tW:tw:C/ /,/="one two three four five six"
-Making the.c
 Making the.h
+Making the.c
 Making the.o from the.h the.c
 .TARGET="phony" .PREFIX="phony" .IMPSRC=""
 .TARGET="all" .PREFIX="all" .IMPSRC=""
@@ -339,12 +338,10 @@ echo "a command prefixed by '+' executes even with -n"
 a command prefixed by '+' executes even with -n
 echo another command
 make -n -j1
-{ echo a command 
-} || exit $?
+echo a command
 echo "a command prefixed by '+' executes even with -n"
 a command prefixed by '+' executes even with -n
-{ echo another command 
-} || exit $?
+echo another command
 Now we expect an error...
 *** Error code 1 (continuing)
 `all' not remade because of errors.

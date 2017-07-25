@@ -1,4 +1,4 @@
-# $Id: options.mk,v 1.1.1.3 2014/03/18 15:55:47 sjg Exp $
+# $Id: options.mk,v 1.5 2014/03/18 16:08:36 sjg Exp $
 #
 #	@(#) Copyright (c) 2012, Simon J. Gerraty
 #

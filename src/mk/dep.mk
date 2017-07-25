@@ -1,4 +1,4 @@
-# $Id: dep.mk,v 1.1.1.1 2013/01/30 20:17:35 sjg Exp $
+# $Id: dep.mk,v 1.3 2013/01/30 20:26:58 sjg Exp $
 
 .if !target(__${.PARSEFILE}__)
 __${.PARSEFILE}__:
