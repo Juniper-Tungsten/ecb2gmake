@@ -1,0 +1,10 @@
+# $Id: forsubst,v 1.1.1.1 2009/10/09 23:41:20 sjg Exp $
+
+all: for-subst
+
+here := ${.PARSEDIR}
+# this should not run foul of the parser
+.for file in ${.PARSEFILE}
+for-subst:	  ${file:S;^;${here}/;g}
+	@echo ".for with :S;... OK"
+.endfor
